@@ -36,11 +36,11 @@ export default function Deposit() {
         <Row label="Balance After Deposit" value={`₦${balance.toLocaleString()}`} bold last />
       </div>
 
-      <div className="bg-[#1A1A2E] text-white rounded-lg p-6 mb-8">
+<div className="bg-[#1A1A2E] text-white rounded-lg p-6 mb-8">
         <h3 className="text-xs text-[#C9A96E] tracking-widest uppercase mb-4">Payment Details</h3>
-        <Row label="Bank" value="First Bank Nigeria" dark />
-        <Row label="Account Name" value="Kallen Visuals" dark />
-        <Row label="Account Number" value="3XXXXXXXXXX" dark last />
+        <Row label="Bank" value="UBA" dark />
+        <Row label="Account Name" value="Nnaji Kenechi Anthony" dark />
+        <Row label="Account Number" value="2065025646" dark last />
       </div>
 
       <h3 className="font-semibold text-[#1A1A2E] mb-4">Upload Proof of Payment</h3>

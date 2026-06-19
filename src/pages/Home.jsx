@@ -12,7 +12,7 @@ export default function Home() {
           Creating Timeless Memories
         </h1>
         <p className="text-gray-300 max-w-md mx-auto mb-8">
-          Professional event photography and videography across Nigeria — weddings,
+          Professional event photography and videography across Nigeria: weddings,
           burials, corporate events, and every ceremony in between.
         </p>
         <Link
@@ -30,18 +30,20 @@ export default function Home() {
           <div className="w-10 h-0.5 bg-[#C9A96E]"></div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { title: 'Weddings', desc: 'Full wedding day coverage, introduction ceremonies, and pre-wedding shoots.' },
-            { title: 'Burials & Remembrance', desc: 'Respectful, dignified coverage of burial and remembrance ceremonies.' },
-            { title: 'Corporate Events', desc: 'Book launches, conferences, and brand activations.' },
-            { title: 'Other Ceremonies', desc: 'Coronations, birthdays, dedications, engagements, and more.' },
-          ].map((s) => (
-            <div key={s.title} className="border border-gray-200 rounded-lg p-6 hover:border-[#C9A96E] hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-[#1A1A2E] rounded-lg mb-4"></div>
-              <h3 className="font-semibold text-[#1A1A2E] mb-2">{s.title}</h3>
-              <p className="text-sm text-gray-500">{s.desc}</p>
-            </div>
-          ))}
+{[
+  { title: 'Weddings', desc: 'Full wedding day coverage, introduction ceremonies, and pre-wedding shoots.', icon: '💍' },
+  { title: 'Burials & Remembrance', desc: 'Respectful, dignified coverage of burial and remembrance ceremonies.', icon: '🕊️' },
+  { title: 'Corporate Events', desc: 'Book launches, conferences, and brand activations.', icon: '🏢' },
+  { title: 'Other Ceremonies', desc: 'Coronations, birthdays, dedications, engagements, and more.', icon: '🎉' },
+].map((s) => (
+  <div key={s.title} className="border border-gray-200 rounded-lg p-6 hover:border-[#C9A96E] hover:shadow-lg transition">
+    <div className="w-12 h-12 bg-[#1A1A2E] rounded-lg mb-4 flex items-center justify-center text-2xl">
+      {s.icon}
+    </div>
+    <h3 className="font-semibold text-[#1A1A2E] mb-2">{s.title}</h3>
+    <p className="text-sm text-gray-500">{s.desc}</p>
+  </div>
+))}
         </div>
       </section>
 

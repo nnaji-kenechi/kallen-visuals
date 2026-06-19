@@ -55,7 +55,6 @@ export default function AdminLogin() {
           Sign In
         </button>
 
-        <p className="text-xs text-gray-400 text-center mt-4">Demo: admin / kallen2025</p>
       </div>
     </div>
   )
