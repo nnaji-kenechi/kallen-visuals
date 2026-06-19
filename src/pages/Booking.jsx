@@ -5,17 +5,24 @@ export default function Booking() {
   const location = useLocation()
   const preselectedPackage = location.state?.package || ''
 
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    eventType: '',
-    weddingTiming: '',
-    date: '',
-    eventLocation: '',
-    package: preselectedPackage,
-    notes: '',
+const [form, setForm] = useState(() => {
+    const saved = localStorage.getItem('kallen_booking_draft')
+    return saved ? JSON.parse(saved) : {
+      name: '',
+      phone: '',
+      email: '',
+      eventType: '',
+      weddingTiming: '',
+      date: '',
+      eventLocation: '',
+      package: preselectedPackage,
+      notes: '',
+    }
   })
+
+  useEffect(() => {
+    localStorage.setItem('kallen_booking_draft', JSON.stringify(form))
+  }, [form])
 
   useEffect(() => {
     if (preselectedPackage) {
@@ -24,22 +31,67 @@ export default function Booking() {
   }, [preselectedPackage])
 
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value })
+const [submittedRef, setSubmittedRef] = useState(null)
 
-const generateReference = () => {
-    const now = new Date()
-    const yy = String(now.getFullYear()).slice(-2)
-    const mm = String(now.getMonth() + 1).padStart(2, '0')
-    const seq = String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')
-    return `KV-${yy}${mm}-${seq}`
-  }
-
-  const handleSubmit = () => {
+const handleSubmit = async () => {
     if (!form.name || !form.phone || !form.eventType || !form.date || !form.eventLocation) {
       alert('Please fill in all required fields')
       return
     }
-    const ref = generateReference()
-    alert(`Booking request sent! Reference: ${ref}\nWe'll reach out on WhatsApp as soon as possible.`)
+
+    try {
+      const res = await fetch('http://localhost:4001/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          phone: form.phone,
+          email: form.email,
+          eventType: form.eventType,
+          weddingTiming: form.weddingTiming,
+          date: form.date,
+          eventLocation: form.eventLocation,
+          package: form.package,
+          notes: form.notes,
+        }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to submit booking')
+      }
+
+const data = await res.json()
+      localStorage.removeItem('kallen_booking_draft')
+      setSubmittedRef(data.ref)    } catch (err) {
+      alert('Something went wrong. Please check your connection and try again.')
+      console.error(err)
+    }
+  }
+
+if (submittedRef) {
+    return (
+      <div className="py-24 px-6 max-w-lg mx-auto text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <h2 className="font-serif text-2xl text-[#1A1A2E] mb-3">Booking Request Sent!</h2>
+        <p className="text-gray-500 text-sm mb-4">We've received your enquiry. Your booking reference is:</p>
+        <div className="inline-block bg-gray-50 border border-gray-200 rounded px-6 py-2 font-mono text-[#1A1A2E] mb-6">
+          {submittedRef}
+        </div>
+        <p className="text-gray-500 text-sm mb-8">We'll reach out on WhatsApp as soon as possible to confirm your date.</p>
+        <a
+          href="https://wa.me/2348110132427"
+          target="_blank"
+          rel="noreferrer"
+          className="bg-[#C9A96E] text-[#1A1A2E] px-6 py-3 rounded font-semibold inline-block hover:bg-[#1A1A2E] hover:text-white transition"
+        >
+          Chat on WhatsApp
+        </a>
+      </div>
+    )
   }
 
   return (
