@@ -1,11 +1,4 @@
-import { useState } from 'react'
-
-const initialBookings = [
-  { ref: 'KV-2606-001', name: 'Adaeze Okonkwo', phone: '08023456789', event: 'Wedding', date: '2026-08-15', location: 'Enugu', package: 'Regular — ₦289,999', status: 'confirmed', total: 289999, deposit: 100000 },
-  { ref: 'KV-2606-002', name: 'Chukwuemeka Eze', phone: '08134567890', event: 'Corporate Event', date: '2026-07-20', location: 'Abuja', package: 'Budget — ₦219,999', status: 'pending', total: 0, deposit: 0 },
-  { ref: 'KV-2606-003', name: 'Ngozi Abia', phone: '09012345678', event: 'Burial', date: '2026-07-05', location: 'Owerri', package: 'Tight Budget — ₦149,999', status: 'deposit-paid', total: 149999, deposit: 70000 },
-  { ref: 'KV-2606-004', name: 'Tunde Balogun', phone: '08098765432', event: 'Coronation', date: '2026-06-28', location: 'Lagos', package: 'Silver — ₦399,999', status: 'completed', total: 399999, deposit: 200000 },
-]
+import { useState, useEffect } from 'react'
 
 const statusStyles = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -26,7 +19,30 @@ const statusLabels = {
 const allStatuses = ['pending', 'confirmed', 'deposit-paid', 'balance-due', 'completed']
 
 export default function AdminDashboard() {
-  const [bookings, setBookings] = useState(initialBookings)
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchBookings()
+  }, [])
+
+  const fetchBookings = async () => {
+    try {
+      const res = await fetch('http://localhost:4001/bookings')
+      const data = await res.json()
+      // Map backend field names to what our UI expects
+      const mapped = data.map((b) => ({
+        ...b,
+        event: b.eventType,
+        location: b.eventLocation,
+      }))
+      setBookings(mapped)
+    } catch (err) {
+      console.error('Failed to fetch bookings', err)
+    } finally {
+      setLoading(false)
+    }
+  }
   const [tab, setTab] = useState('dashboard')
   const [selected, setSelected] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -57,27 +73,47 @@ export default function AdminDashboard() {
     setDetailOpen(true)
   }
 
-  const saveConfirm = () => {
+const saveConfirm = async () => {
     if (!form.total || !form.deposit) {
       showToast('Please enter both amounts')
       return
     }
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.ref === selected.ref
-          ? { ...b, status: 'confirmed', total: Number(form.total), deposit: Number(form.deposit) }
-          : b
-      )
-    )
-    setModalOpen(false)
-    showToast(`${selected.ref} confirmed! Deposit link ready.`)
+    try {
+      const res = await fetch(`http://localhost:4001/bookings/${selected.ref}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'confirmed',
+          total: Number(form.total),
+          deposit: Number(form.deposit),
+        }),
+      })
+      if (!res.ok) throw new Error('Update failed')
+
+      await fetchBookings()
+      setModalOpen(false)
+      showToast(`${selected.ref} confirmed! Deposit link ready.`)
+    } catch (err) {
+      showToast('Failed to confirm booking. Check your connection.')
+      console.error(err)
+    }
   }
 
-  const updateStatus = (ref, status) => {
-    setBookings((prev) =>
-      prev.map((b) => (b.ref === ref ? { ...b, status } : b))
-    )
-    showToast(`Status updated to ${statusLabels[status]}`)
+  const updateStatus = async (ref, status) => {
+    try {
+      const res = await fetch(`http://localhost:4001/bookings/${ref}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) throw new Error('Update failed')
+
+      await fetchBookings()
+      showToast(`Status updated to ${statusLabels[status]}`)
+    } catch (err) {
+      showToast('Failed to update status. Check your connection.')
+      console.error(err)
+    }
   }
 
   const copyLink = (ref) => {

@@ -60,10 +60,12 @@ const handleSubmit = async () => {
         throw new Error('Failed to submit booking')
       }
 
-const data = await res.json()
+      const data = await res.json()
       localStorage.removeItem('kallen_booking_draft')
-      setSubmittedRef(data.ref)    } catch (err) {
-      alert('Something went wrong. Please check your connection and try again.')
+      setSubmittedRef(data.ref)
+      window.scrollTo(0, 0)
+    } catch (err) {
+      alert('Error: ' + err.message)
       console.error(err)
     }
   }
