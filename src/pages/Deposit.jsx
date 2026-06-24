@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 // Mock data — Phase 2 will fetch this from the backend by reference
@@ -16,9 +17,33 @@ export default function Deposit() {
   const booking = { ...mockBooking, ref: ref || mockBooking.ref }
   const balance = booking.total - booking.deposit
 
-  const handleUpload = (e) => {
-    if (e.target.files[0]) {
-      alert(`File "${e.target.files[0].name}" ready to upload. (Phase 2 will send this to AWS S3.)`)
+const [uploading, setUploading] = useState(false)
+  const [uploaded, setUploaded] = useState(false)
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch(`http://localhost:4002/upload/deposit/${booking.ref}`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) throw new Error('Upload failed')
+
+      const data = await res.json()
+      console.log('Uploaded:', data.url)
+      setUploaded(true)
+    } catch (err) {
+      alert('Upload failed. Please check your connection and try again.')
+      console.error(err)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -43,16 +68,29 @@ export default function Deposit() {
         <Row label="Account Number" value="2065025646" dark last />
       </div>
 
-      <h3 className="font-semibold text-[#1A1A2E] mb-4">Upload Proof of Payment</h3>
-      <label className="block border-2 border-dashed border-gray-200 rounded-lg p-10 text-center cursor-pointer hover:border-[#C9A96E] transition">
-        <svg className="mx-auto mb-3 text-gray-400" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" />
-          <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-        <p className="text-sm text-gray-500"><strong className="text-[#1A1A2E]">Tap to upload</strong> your payment proof</p>
-        <p className="text-xs text-gray-400 mt-1">JPG, PNG or PDF accepted</p>
-        <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleUpload} />
+<h3 className="font-semibold text-[#1A1A2E] mb-4">Upload Proof of Payment</h3>
+      <label className={`block border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition ${uploaded ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-[#C9A96E]'}`}>
+        {uploaded ? (
+          <>
+            <svg className="mx-auto mb-3 text-green-600" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <p className="text-sm text-green-700 font-medium">File uploaded successfully!</p>
+          </>
+        ) : (
+          <>
+            <svg className="mx-auto mb-3 text-gray-400" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <p className="text-sm text-gray-500">
+              <strong className="text-[#1A1A2E]">{uploading ? 'Uploading...' : 'Tap to upload'}</strong> your payment proof
+            </p>
+            <p className="text-xs text-gray-400 mt-1">JPG, PNG or PDF accepted</p>
+          </>
+        )}
+        <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleUpload} disabled={uploading} />
       </label>
 
       <button className="w-full bg-[#C9A96E] text-[#1A1A2E] py-4 rounded font-semibold mt-6 hover:bg-[#1A1A2E] hover:text-white transition">

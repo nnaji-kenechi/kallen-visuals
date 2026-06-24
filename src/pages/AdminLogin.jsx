@@ -5,13 +5,31 @@ export default function AdminLogin() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleLogin = () => {
-    if (username === 'admin' && password === 'kallen2025') {
-      navigate('/admin')
-    } else {
-      setError('Incorrect username or password')
+  const handleLogin = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch('http://localhost:4004/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        localStorage.setItem('kallen_admin_token', data.token)
+        navigate('/admin')
+      } else {
+        setError('Incorrect username or password')
+      }
+    } catch (err) {
+      setError('Could not connect to server. Please try again.')
+      console.error(err)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -31,7 +49,7 @@ export default function AdminLogin() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="input"
-            placeholder="admin"
+            placeholder="Username"
           />
         </div>
 
@@ -50,11 +68,11 @@ export default function AdminLogin() {
 
         <button
           onClick={handleLogin}
-          className="w-full bg-[#C9A96E] text-[#1A1A2E] py-3 rounded font-semibold mt-4 hover:bg-[#1A1A2E] hover:text-white transition"
+          disabled={loading}
+          className="w-full bg-[#C9A96E] text-[#1A1A2E] py-3 rounded font-semibold mt-4 hover:bg-[#1A1A2E] hover:text-white transition disabled:opacity-50"
         >
-          Sign In
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
-
       </div>
     </div>
   )

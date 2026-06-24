@@ -131,7 +131,7 @@ const saveConfirm = async () => {
           <p className="font-serif text-white text-lg">Kallen Visuals</p>
           <p className="text-[10px] text-[#C9A96E] tracking-widest uppercase mt-1">Admin</p>
         </div>
-        {['dashboard', 'bookings', 'deposits'].map((t) => (
+	{['dashboard', 'bookings', 'deposits', 'portfolio'].map((t) => (       
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -226,6 +226,8 @@ const saveConfirm = async () => {
             </div>
           </>
         )}
+{/* PORTFOLIO TAB */}
+        {tab === 'portfolio' && <PortfolioManager showToast={showToast} />}
       </div>
 
       {/* CONFIRM MODAL */}
@@ -413,5 +415,123 @@ function Row({ label, value }) {
       <span className="text-gray-500">{label}</span>
       <span className="text-[#1A1A2E] font-medium">{value}</span>
     </div>
+  )
+}
+
+function PortfolioManager({ showToast }) {
+  const [photos, setPhotos] = useState([])
+  const [category, setCategory] = useState('weddings')
+  const [label, setLabel] = useState('')
+  const [uploading, setUploading] = useState(false)
+
+  useEffect(() => {
+    fetchPhotos()
+  }, [])
+
+  const fetchPhotos = async () => {
+    try {
+      const res = await fetch('http://localhost:4002/portfolio')
+      const data = await res.json()
+      setPhotos(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+const handleDelete = async (key) => {
+    if (!confirm('Delete this photo? This cannot be undone.')) return
+    try {
+      const res = await fetch('http://localhost:4002/portfolio', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key }),
+      })
+      if (!res.ok) throw new Error('Delete failed')
+      showToast('Photo deleted')
+      fetchPhotos()
+    } catch (err) {
+      showToast('Failed to delete photo')
+      console.error(err)
+    }
+  }
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (!label) {
+      showToast('Please enter a label first')
+      return
+    }
+
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('category', category)
+    formData.append('label', label)
+
+    try {
+      const res = await fetch('http://localhost:4002/upload/portfolio', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) throw new Error('Upload failed')
+      showToast('Photo uploaded successfully!')
+      setLabel('')
+      fetchPhotos()
+    } catch (err) {
+      showToast('Upload failed. Check your connection.')
+      console.error(err)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <>
+      <h2 className="font-serif text-2xl text-[#1A1A2E] mb-6">Portfolio Photos</h2>
+
+      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <h3 className="font-semibold text-[#1A1A2E] mb-4">Upload New Photo</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-[#1A1A2E] mb-2">Category</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="input">
+              <option value="weddings">Weddings</option>
+              <option value="burials">Burials</option>
+              <option value="corporate">Corporate</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#1A1A2E] mb-2">Label</label>
+            <input value={label} onChange={(e) => setLabel(e.target.value)} className="input" placeholder="e.g. Wedding Reception" />
+          </div>
+        </div>
+        <label className="block border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-[#C9A96E] transition">
+          <p className="text-sm text-gray-500">
+            <strong className="text-[#1A1A2E]">{uploading ? 'Uploading...' : 'Tap to choose a photo'}</strong>
+          </p>
+          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+        </label>
+      </div>
+
+      <h3 className="font-semibold text-[#1A1A2E] mb-4">Uploaded Photos ({photos.length})</h3>
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {photos.map((p) => (
+          <div key={p.key} className="border border-gray-200 rounded-lg overflow-hidden">
+            <img src={p.url} alt={p.category} className="w-full aspect-square object-cover" />
+            <div className="flex justify-between items-center p-2">
+              <p className="text-xs text-gray-500 capitalize">{p.category}</p>
+              <button
+                onClick={() => handleDelete(p.key)}
+                className="text-xs text-red-500 hover:text-red-700 font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   )
 }

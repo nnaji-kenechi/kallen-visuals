@@ -1,28 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const categories = ['All Events', 'Weddings', 'Burials', 'Corporate', 'Other']
 
-const items = [
-  { cat: 'Weddings', label: 'Wedding Ceremony' },
-  { cat: 'Weddings', label: 'Traditional Wedding' },
-  { cat: 'Weddings', label: 'Couple Portrait' },
-  { cat: 'Weddings', label: 'Reception Dance' },
-  { cat: 'Burials', label: 'Burial Ceremony' },
-  { cat: 'Burials', label: 'Remembrance Event' },
-  { cat: 'Corporate', label: 'Book Launch' },
-  { cat: 'Corporate', label: 'Corporate Dinner' },
-  { cat: 'Corporate', label: 'Conference' },
-  { cat: 'Other', label: 'Coronation' },
-  { cat: 'Other', label: 'Birthday Party' },
-  { cat: 'Other', label: 'Engagement' },
-]
+const categoryMap = {
+  'All Events': 'all',
+  'Weddings': 'weddings',
+  'Burials': 'burials',
+  'Corporate': 'corporate',
+  'Other': 'other',
+}
 
 export default function Portfolio() {
   const [active, setActive] = useState('All Events')
+  const [photos, setPhotos] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('http://localhost:4002/portfolio')
+      .then((res) => res.json())
+      .then((data) => setPhotos(data))
+      .catch((err) => console.error('Failed to load portfolio', err))
+      .finally(() => setLoading(false))
+  }, [])
 
   const filtered = active === 'All Events'
-    ? items
-    : items.filter((i) => i.cat === active)
+    ? photos
+    : photos.filter((p) => p.category === categoryMap[active])
 
   return (
     <div className="py-16 px-6 max-w-6xl mx-auto">
@@ -48,15 +51,21 @@ export default function Portfolio() {
         ))}
       </div>
 
+      {loading && <p className="text-gray-400 text-sm">Loading photos...</p>}
+
+      {!loading && filtered.length === 0 && (
+        <p className="text-gray-400 text-sm">No photos in this category yet.</p>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {filtered.map((item, i) => (
+        {filtered.map((photo) => (
           <div
-            key={i}
-            className="relative aspect-[4/3] bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center group overflow-hidden"
+            key={photo.key}
+            className="relative aspect-[4/3] bg-gray-50 border border-gray-200 rounded-lg overflow-hidden group"
           >
-            <span className="text-gray-300 text-sm">Photo slot</span>
+            <img src={photo.url} alt={photo.category} className="w-full h-full object-cover" />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#1A1A2E]/85 to-transparent p-3 opacity-0 group-hover:opacity-100 transition">
-              <span className="text-white text-sm font-medium">{item.label}</span>
+              <span className="text-white text-sm font-medium capitalize">{photo.category}</span>
             </div>
           </div>
         ))}
