@@ -60,8 +60,31 @@ app.post('/bookings', async (req, res) => {
       createdAt: new Date().toISOString(),
     }
 
-    await dynamodb.put({ TableName: TABLE_NAME, Item: newBooking }).promise()
-    console.log('New booking saved to DynamoDB:', newBooking.ref)
+await dynamodb.put({
+TableName: TABLE_NAME,
+Item: newBooking
+}).promise()
+
+console.log('New booking saved to DynamoDB:', newBooking.ref)
+
+await fetch('http://localhost:4004/notify', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({
+message:
+`📸 NEW BOOKING
+
+Ref: ${newBooking.ref}
+Name: ${newBooking.name}
+Phone: ${newBooking.phone}
+Event: ${newBooking.eventType}
+Date: ${newBooking.date}
+Location: ${newBooking.eventLocation}
+Package: ${newBooking.package}`
+})
+})
 
     res.status(201).json(newBooking)
   } catch (err) {
