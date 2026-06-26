@@ -45,7 +45,19 @@ app.post('/upload/deposit/:ref', upload.single('file'), async (req, res) => {
 
     const fileUrl = `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`
 
-    console.log(`Deposit proof uploaded for ${ref}: ${key}`)
+console.log(`Deposit proof uploaded for ${ref}: ${key}`)
+
+    // Notify admin via ntfy
+    try {
+      await fetch('https://ntfy.sh/kallen-visuals', {
+        method: 'POST',
+        headers: { 'Title': 'Deposit Proof Uploaded' },
+        body: `Booking ${ref} just uploaded a deposit proof.\nCheck S3 or ask client to confirm.`,
+      })
+    } catch (notifyErr) {
+      console.error('Failed to send notification:', notifyErr)
+    }
+
     res.json({ success: true, url: fileUrl, key })
   } catch (err) {
     console.error(err)
