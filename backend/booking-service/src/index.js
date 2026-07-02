@@ -67,7 +67,7 @@ Item: newBooking
 
 console.log('New booking saved to DynamoDB:', newBooking.ref)
 
-await fetch('http://localhost:4004/notify', {
+await fetch('http://localhost:4003/notify', {
 method: 'POST',
 headers: {
 'Content-Type': 'application/json'

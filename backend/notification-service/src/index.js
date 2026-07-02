@@ -12,36 +12,48 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-res.send("Notification service running");
+  res.send("Notification service running");
 });
 
 app.post("/notify", async (req, res) => {
-try {
-const { message } = req.body;
+  try {
+    console.log("BODY:", req.body);
 
-await fetch(process.env.NTFY_URL, {
-  method: "POST",
-  body: message
-});
+    const { message } = req.body || {};
 
-res.json({
-  success: true,
-  message: "Notification sent"
-});
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        error: "message is required"
+      });
+    }
 
-} catch (error) {
-console.error(error);
+    const response = await fetch(process.env.NTFY_URL, {
+      method: "POST",
+      body: message
+    });
 
-res.status(500).json({
-  success: false,
-  error: error.message
-});
+    if (!response.ok) {
+      throw new Error("Failed to send notification to ntfy");
+    }
 
-}
+    res.json({
+      success: true,
+      message: "Notification sent"
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 app.listen(PORT, () => {
-console.log(
-"Notification service running on port ${PORT}"
-);
+  console.log(
+    `Notification service running on http://localhost:${PORT}`
+  );
 });

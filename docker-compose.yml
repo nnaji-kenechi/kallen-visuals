@@ -1,0 +1,21 @@
+services:
+
+  bookings:
+    build: ./backend/booking-service
+    ports:
+      - "4001:4001"
+
+  media:
+    build: ./backend/media-service
+    ports:
+      - "4002:4002"
+
+  notifications:
+    build: ./backend/notification-service
+    ports:
+      - "4003:4003"
+
+  auth:
+    build: ./backend/auth-service
+    ports:
+      - "4004:4004"
