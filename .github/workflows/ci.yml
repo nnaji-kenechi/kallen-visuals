@@ -1,0 +1,54 @@
+name: Kallen Visuals CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Booking Dependencies
+        working-directory: backend/booking-service
+        run: yarn install --frozen-lockfile
+
+      - name: Install Media Dependencies
+        working-directory: backend/media-service
+        run: yarn install --frozen-lockfile
+
+      - name: Install Notification Dependencies
+        working-directory: backend/notification-service
+        run: yarn install --frozen-lockfile
+
+      - name: Install Auth Dependencies
+        working-directory: backend/auth-service
+        run: yarn install --frozen-lockfile
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Booking Image
+        run: docker build -t booking ./backend/booking-service
+
+      - name: Build Media Image
+        run: docker build -t media ./backend/media-service
+
+      - name: Build Notification Image
+        run: docker build -t notification ./backend/notification-service
+
+      - name: Build Auth Image
+        run: docker build -t auth ./backend/auth-service
